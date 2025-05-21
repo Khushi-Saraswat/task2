@@ -41,14 +41,14 @@ public class SecurityConfig {
     }
 
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(
-                        authorization -> authorization.requestMatchers("/api/auth/**", "/api/Test/all").permitAll()
-                                .anyRequest().authenticated())
-                .addFilterBefore(new JwtTokenValidator(), BasicAuthenticationFilter.class)
-                .csrf(csrf -> csrf.disable());
+            .sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authorizeHttpRequests(authorization -> authorization
+                .anyRequest().permitAll()
+            )
+            .addFilterBefore(new JwtTokenValidator(), BasicAuthenticationFilter.class)
+            .csrf(csrf -> csrf.disable());
 
         return http.build();
     }
