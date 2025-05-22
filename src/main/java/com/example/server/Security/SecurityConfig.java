@@ -42,11 +42,12 @@ public class SecurityConfig {
         http
                 .sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorization -> authorization
-                        .requestMatchers("/api/auth/signin", "/api/auth/signup,/api/Test/all").permitAll()
+                        .requestMatchers("/api/auth/signin", "/api/auth/signup", "/api/Test/all").permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(new JwtTokenValidator(), BasicAuthenticationFilter.class)
                 .csrf(csrf -> csrf.disable());
 
         return http.build();
     }
+
 }
