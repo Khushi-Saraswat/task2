@@ -1,6 +1,7 @@
 package com.example.server.Security;
 
 import java.io.IOException;
+
 import javax.crypto.SecretKey;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +26,15 @@ public class JwtTokenValidator extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
+
+        String path = request.getServletPath();
+        System.out.println(path);
+
+        // ✅ Skip JWT validation for public endpoints
+        if (path.startsWith("/api/auth/") || path.equals("/login.html") || path.equals("/Register.html")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
         String jwt = request.getHeader(JwtConstant.JWT_HEADER);
 
