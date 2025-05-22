@@ -8,8 +8,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -42,7 +42,7 @@ public class AuthController {
     }
 
     @PostMapping("/signin")
-    public ResponseEntity<?> authenticateUser(@RequestBody AppUser appuser) {
+    public ResponseEntity<?> authenticateUser(@ModelAttribute AppUser appuser) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         appuser.getUsername(),
@@ -50,16 +50,17 @@ public class AuthController {
 
         String jwt = JwtProvider.generateToken(authentication);
         Set<String> roles = JwtProvider.extractRoles(jwt);
+
         System.out.println("Inside LoginUser method");
         System.out.println("Incoming user: " + appuser);
         String message = roles + " is logged in";
-        System.out.println(message + "message");
+        System.out.println(message + " message");
 
         return ResponseEntity.ok(new LoginRes(jwt, message));
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<?> registerUser(@RequestBody UserDto userDto) {
+    public ResponseEntity<?> registerUser(@ModelAttribute UserDto userDto) {
         System.out.println("Inside registerUser method");
         System.out.println("Incoming user: " + userDto);
 
