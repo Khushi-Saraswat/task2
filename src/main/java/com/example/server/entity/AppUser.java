@@ -1,4 +1,5 @@
 package com.example.server.entity;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -12,10 +13,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 
-
-
-
-
 @Entity
 public class AppUser {
 
@@ -23,18 +20,25 @@ public class AppUser {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
-    private String username;
+    private String name;
 
-    
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    @Column(nullable = false, unique = true)
+    private String email;
+
     @Column(nullable = false, unique = true)
     private String password;
 
     @ManyToMany(fetch = FetchType.EAGER)
-	@JoinTable(name = "users_role", joinColumns = @JoinColumn(name = "cust_id", referencedColumnName = "id"),
-	inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id") )
-	Set<Role> roles = new HashSet<Role>();
- 
+    @JoinTable(name = "users_role", joinColumns = @JoinColumn(name = "cust_id", referencedColumnName = "id"), inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"))
+    Set<Role> roles = new HashSet<Role>();
 
     public Set<Role> getRoles() {
         return roles;
@@ -44,7 +48,6 @@ public class AppUser {
         this.roles = roles;
     }
 
-    
     public Long getId() {
         return id;
     }
@@ -53,12 +56,12 @@ public class AppUser {
         this.id = id;
     }
 
-    public String getUsername() {
-        return username;
+    public String getEmail() {
+        return email;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public String getPassword() {
@@ -69,18 +72,14 @@ public class AppUser {
         this.password = password;
     }
 
-
-
-
-    
-
-    public AppUser(String username, String password) {
-        this.username = username;
+    public AppUser(String email, String password, String name) {
+        this.email = email;
         this.password = password;
+        this.name = name;
     }
 
-     public AppUser(){
+    public AppUser() {
 
-     }
-    
+    }
+
 }

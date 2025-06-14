@@ -44,8 +44,10 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(Arrays.asList("*")); // For local HTML
+        config.setAllowedOrigins(Arrays.asList("http://localhost:3000/")); // For local HTML
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        // config.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
+        // config.setExposedHeaders(Arrays.asList("Authorization"));
         config.setAllowedHeaders(Arrays.asList("*"));
         config.setAllowCredentials(true);
 

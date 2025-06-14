@@ -24,66 +24,65 @@ import com.example.server.entity.UserDto;
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
 
-    @Autowired
-    private UserRepository userRepository;
+  @Autowired
+  private UserRepository userRepository;
 
-    @Autowired
-    private Rolerepo rolerepo;
+  @Autowired
+  private Rolerepo rolerepo;
 
-    private BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+  private BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
-    @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        AppUser user = userRepository.findByUsername(username);
-        System.out.println("user" + "" + user + "in custome user details service");
-        if (user == null) {
-            throw new UsernameNotFoundException("User not found with username: " + user);
-        }
+  @Override
+  public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
 
-        return new org.springframework.security.core.userdetails.User(user.getUsername(), user.getPassword(),
-                mapRolesToAuthorities(user.getRoles()));
+    System.out.println("inside custom user details service");
+    System.out.println("username in user details service" + "" + email);
+    AppUser user = userRepository.findByEmail(email);
+    System.out.println("user" + "" + user + "in custome user details service");
+    if (user == null) {
+      throw new UsernameNotFoundException("User not found with username: " + user);
     }
 
-    public Collection<? extends GrantedAuthority> mapRolesToAuthorities(Set<Role> roles) {
-        return roles.stream().map(role -> new SimpleGrantedAuthority(role.getRole())).collect(Collectors.toList());
-    }
+    return new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPassword(),
+        mapRolesToAuthorities(user.getRoles()));
+  }
 
-    public AppUser save(UserDto userregisterationdto){
-    
-      Role role=null;
-      if("USER".equalsIgnoreCase(userregisterationdto.getRole())){
+  public Collection<? extends GrantedAuthority> mapRolesToAuthorities(Set<Role> roles) {
+    return roles.stream().map(role -> new SimpleGrantedAuthority(role.getRole())).collect(Collectors.toList());
+  }
 
-        role=rolerepo.findByRole("ROLE_USER");
+  public AppUser save(UserDto userregisterationdto) {
 
-        if (role == null) {
-            role = new Role("ROLE_USER"); // create new role if not found
-            rolerepo.save(role);
-        }
+    Role role = null;
+    if ("USER".equalsIgnoreCase(userregisterationdto.getRole())) {
+
+      role = rolerepo.findByRole("ROLE_USER");
+
+      if (role == null) {
+        role = new Role("ROLE_USER"); // create new role if not found
+        rolerepo.save(role);
       }
-      
+    }
 
-      else if("ADMIN".equalsIgnoreCase(userregisterationdto.getRole())){
+    else if ("ADMIN".equalsIgnoreCase(userregisterationdto.getRole())) {
 
+      role = rolerepo.findByRole("ROLE_ADMIN");
 
-        role=rolerepo.findByRole("ROLE_ADMIN");
-
-        if (role == null) {
-            role = new Role("ROLE_ADMIN"); // create new role if not found
-            rolerepo.save(role);
-        }
-
+      if (role == null) {
+        role = new Role("ROLE_ADMIN"); // create new role if not found
+        rolerepo.save(role);
       }
-      
-      
-      
-      AppUser user=new AppUser();
-      user.setUsername(userregisterationdto.getUsername());
-      user.setPassword(passwordEncoder.encode(userregisterationdto.getPassword()));
-      user.setRoles(new HashSet<>(Collections.singleton(role)));
-
-      return userRepository.save(user);
-
 
     }
+
+    AppUser user = new AppUser();
+    user.setEmail(userregisterationdto.getEmail());
+    user.setPassword(passwordEncoder.encode(userregisterationdto.getPassword()));
+    user.setRoles(new HashSet<>(Collections.singleton(role)));
+    user.setName(userregisterationdto.getName());
+
+    return userRepository.save(user);
+
+  }
 
 }
