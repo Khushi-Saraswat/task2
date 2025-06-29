@@ -1,6 +1,6 @@
 package com.example.server.Security;
 
-import java.util.Arrays;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -44,11 +44,16 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(Arrays.asList("http://localhost:3000/")); // For local HTML
-        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        // config.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
-        // config.setExposedHeaders(Arrays.asList("Authorization"));
-        config.setAllowedHeaders(Arrays.asList("*"));
+
+        config.setAllowedOrigins(List.of(
+                "https://comfy-bublanina-88c5ac.netlify.app",
+                "http://localhost:3000"));
+
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("*"));
+
+        config.setExposedHeaders(List.of("Authorization"));
+
         config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

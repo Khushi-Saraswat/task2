@@ -82,4 +82,10 @@ public class AppUser {
 
     }
 
+    @Override
+    public String toString() {
+        return "AppUser [id=" + id + ", name=" + name + ", email=" + email + ", password=" + password + ", roles="
+                + roles + "]";
+    }
+
 }
