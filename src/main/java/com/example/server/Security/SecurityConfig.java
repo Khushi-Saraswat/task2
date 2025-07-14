@@ -1,8 +1,9 @@
 package com.example.server.Security;
 
-import java.util.Arrays;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -19,6 +20,9 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
 public class SecurityConfig {
+
+    @Value("${FRONTEND_URL}")
+    private String frontendUrl;
 
     @Autowired
     private CustomUserDetailsService customUserDetailsService;
@@ -44,11 +48,16 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(Arrays.asList("http://localhost:3000/")); // For local HTML
-        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        // config.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
-        // config.setExposedHeaders(Arrays.asList("Authorization"));
-        config.setAllowedHeaders(Arrays.asList("*"));
+
+        config.setAllowedOrigins(List.of(
+
+                frontendUrl));
+
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("*"));
+
+        config.setExposedHeaders(List.of("Authorization"));
+
         config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
@@ -67,7 +76,7 @@ public class SecurityConfig {
                                 "/api/auth/**",
                                 "/api/auth/signup",
                                 "/api/auth/signin",
-                                "/api/Test/all")
+                                "/api/Test/all", "/api/auth/profile")
                         .permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(new JwtTokenValidator(), BasicAuthenticationFilter.class);

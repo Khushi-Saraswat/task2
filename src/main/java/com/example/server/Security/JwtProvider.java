@@ -1,6 +1,5 @@
 package com.example.server.Security;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
@@ -21,32 +20,29 @@ public class JwtProvider {
     private static final SecretKey key = JwtConstant.SECRET_KEY; // Use directly
 
     public static String generateToken(Authentication auth) {
-
         Collection<? extends GrantedAuthority> authorities = auth.getAuthorities();
 
-        String roles = authorities.stream()
+        var authorityList = authorities.stream()
                 .map(GrantedAuthority::getAuthority)
-                .collect(Collectors.joining(","));
+                .collect(Collectors.toList());
 
-        // Generate the JWT token
         return Jwts.builder()
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + 86400000)) // 1 day expiration
-                .claim("email", auth.getName()) // Store email (username or email based on your setup)
-                .claim("roles", roles) // Store roles as a string (comma-separated if more than one role)
-                .signWith(JwtConstant.SECRET_KEY) // Use the correct key from JwtConstant
+                .expiration(new Date(System.currentTimeMillis() + 86400000)) // 1 day
+                .claim("email", auth.getName())
+                .claim("roles", authorityList)
+                .signWith(JwtConstant.SECRET_KEY, Jwts.SIG.HS384) // ✅ specify algorithm
                 .compact();
     }
 
     public static String getEmailFromToken(String token) {
-        token = token.substring(7); // Remove "Bearer " prefix
         Claims claims = Jwts.parser()
-                .verifyWith(key) // Use correct verification method
+                .verifyWith(key) // assumes `key` is the same used during signing
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
 
-        return claims.get("email", String.class);
+        return claims.get("email", String.class); // ✅ you're extracting correct custom claim
     }
 
     public static String populateAuthorities(Collection<? extends GrantedAuthority> authorities) {
@@ -69,15 +65,14 @@ public class JwtProvider {
 
     public static Set<String> extractRoles(String token) {
         Claims claims = extractAllClaims(token);
+        Object rolesObject = claims.get("roles");
 
-        String rolesString = claims.get("roles", String.class);
-
-        if (rolesString == null || rolesString.isEmpty()) {
-            return new HashSet<>();
+        if (rolesObject instanceof Collection<?>) {
+            return ((Collection<?>) rolesObject).stream()
+                    .map(Object::toString)
+                    .collect(Collectors.toSet());
         }
 
-        String[] rolesArray = rolesString.split(",");
-        return new HashSet<>(Arrays.asList(rolesArray));
+        return new HashSet<>();
     }
-
 }

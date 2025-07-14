@@ -1,15 +1,11 @@
 package com.example.server.Controller;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -22,10 +18,13 @@ import com.example.server.Response.LoginRes;
 import com.example.server.Response.RegisterRes;
 import com.example.server.Security.CustomUserDetailsService;
 import com.example.server.Security.JwtProvider;
+import com.example.server.Service.UserService;
 import com.example.server.entity.AppUser;
 import com.example.server.entity.UserDto;
 
-@CrossOrigin(origins = "*")
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
+
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -34,15 +33,20 @@ public class AuthController {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final CustomUserDetailsService customUserDetailsService;
+    private final UserService userService;
 
     public AuthController(AuthenticationManager authenticationManager,
             UserRepository userRepository,
             PasswordEncoder passwordEncoder,
-            CustomUserDetailsService customUserDetailsService) {
+            CustomUserDetailsService customUserDetailsService,
+            UserService userService
+
+    ) {
         this.authenticationManager = authenticationManager;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.customUserDetailsService = customUserDetailsService;
+        this.userService = userService;
     }
 
     @PostMapping("/signin")
@@ -52,15 +56,14 @@ public class AuthController {
                         appuser.getEmail(),
                         appuser.getPassword()));
 
+        AppUser user = userRepository.findByEmail(appuser.getEmail());
         String jwt = JwtProvider.generateToken(authentication);
-        Set<String> roles = JwtProvider.extractRoles(jwt);
 
         System.out.println("Inside LoginUser method");
-        System.out.println("Incoming user: " + appuser);
-        String message = roles + " is logged in";
-        System.out.println(message + " message");
-
-        return ResponseEntity.ok(new LoginRes(jwt, message));
+        System.out.println(" user: " + user);
+        String role = user.getRole().toString();
+        System.out.println("role in login" + role);
+        return ResponseEntity.ok(new LoginRes(jwt, role));
 
     }
 
@@ -74,6 +77,7 @@ public class AuthController {
         }
 
         AppUser user = customUserDetailsService.save(userDto);
+        System.out.println("User after save: " + user);
 
         if (user == null) {
             return ResponseEntity.ok(new RegisterRes("User was not saved successfully"));
@@ -83,17 +87,36 @@ public class AuthController {
     }
 
     @GetMapping("/api/auth/role")
-    public ResponseEntity<Map<String, String>> getRoleFromToken(@RequestHeader("Authorization") String token) {
-        String jwt = token.replace("Bearer ", "");
-        Set<String> roles = JwtProvider.extractRoles(jwt);
-        System.out.println("Extracted roles: " + roles);
-        Map<String, String> response = new HashMap<>();
-        if (roles.isEmpty()) {
-            response.put("message", "No roles found in the token");
-            return ResponseEntity.ok(response);
+    public ResponseEntity<String> getRoleFromToken(@RequestHeader("Authorization") String token) {
+        try {
+
+            if (token != null && token.startsWith("Bearer ")) {
+                token = token.substring(7);
+            } else {
+                return ResponseEntity.badRequest().body("Invalid Authorization header");
+            }
+
+            String email = JwtProvider.getEmailFromToken(token);
+
+            System.out.println(email + " <- email extracted from token");
+
+            AppUser user = userRepository.findByEmail(email);
+            if (user == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found for email: " + email);
+            }
+
+            String role = user.getRole().toString();
+            System.out.println(role + "role");
+            return ResponseEntity.ok(role);
+
+        } catch (MalformedJwtException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Malformed JWT token: " + e.getMessage());
+        } catch (ExpiredJwtException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("JWT token has expired");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error parsing token: " + e.getMessage());
         }
-        response.put("role", roles.iterator().next());
-        return ResponseEntity.ok(response);
     }
 
 }
